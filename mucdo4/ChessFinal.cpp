@@ -1,4 +1,4 @@
-﻿#include <SFML/Graphics.hpp>
+#include <SFML/Graphics.hpp>
 #include <time.h>
 #include <windows.h>
 #include <iostream>
@@ -10,12 +10,12 @@ using namespace std;
 int squareSize = 56;                          // kích thước ô cờ
 Vector2f offset(28, 28);                 // Offset của mỗi quân cờ
 bool isBotTurn = false;
-std::vector<std::string> moveHistory; // Lich su di chuyen
-std::vector<bool> pawnPromoted(32, false);
+vector<string> moveHistory; // Lich su di chuyen
+vector<bool> pawnPromoted(32, false);
 
 Sprite f[32];                           // mảng lưu hình ảnh 32 quân cờ
 string position = "";                // các nước di chuyển của ván đấu
-int isWhiteKingDead = 0;
+int isWhiteKingDead = 0;    
 int isBlackKingDead = 0;
 // Stockfish process handles
 STARTUPINFOA sti = { 0 };
@@ -32,23 +32,6 @@ int board[8][8] =
   0, 0, 0, 0, 0, 0, 0, 0,
   6, 6, 6, 6, 6, 6, 6, 6,
   1, 2, 3, 4, 5, 3, 2, 1 };
-
-void drawMoveHistory(RenderWindow& window) {
-    Font font;
-    font.loadFromFile("Roboto-Medium.ttf");
-    Text text("", font, 15);
-    text.setFillColor(Color::White);
-    text.setPosition(520, 10); // Set vi tri cua text
-
-    std::ostringstream ss;
-    ss << "Move History:\n";
-    for (const auto& move : moveHistory) {
-        ss << move << "\n";
-    }
-    text.setString(ss.str());
-    window.draw(text);
-}
-
 
 // chuyển vị trí quân cờ từ dạng vector2f sang kí hiệu cờ vua đại số (algebraic notation)
 string toChessNote(Vector2f p)
@@ -108,78 +91,53 @@ bool isBlackKing(Sprite& piece) {
     return (textureRect == blackKingRect);
 }
 
-void displayBlackWon() {
-    RenderWindow window(VideoMode(800, 800), "Result");
+bool displayWon(int a) {
+    RenderWindow window(VideoMode(300, 100), "Result");
     window.clear(Color::White);
 
-    Font font;
-    if (!font.loadFromFile("Roboto-Medium.ttf")) {
-        return;
+    // Load the image as a texture
+    Texture texture;
+    if (a) {
+        texture.loadFromFile("code/images/wwon.png");  
+    } 
+    else  {
+        texture.loadFromFile("code/images/bwon.png");
     }
 
-    Text text;
-    text.setFont(font);
-    text.setString("BLACKS WON");
-    text.setCharacterSize(50);  // Adjust the size as needed
-    text.setFillColor(Color::Black);  // Black text color
-    text.setStyle(Text::Bold);
+    // Create a sprite to display the texture
+    Sprite sprite;
+    sprite.setTexture(texture);
 
-    // Center text in the window
-    FloatRect textRect = text.getLocalBounds();
-    text.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
-    text.setPosition(window.getSize().x / 2.0f, window.getSize().y / 2.0f);
+    // Set the size and position of the sprite to center it
+    sprite.setScale(300.0f / texture.getSize().x, 100.0f / texture.getSize().y); // Scale to 300x100
+    sprite.setPosition(
+        (window.getSize().x - sprite.getGlobalBounds().width) / 2.0f,
+        (window.getSize().y - sprite.getGlobalBounds().height) / 2.0f
+    );
 
     while (window.isOpen()) {
         Event event;
         while (window.pollEvent(event)) {
-            if (event.type == Event::Closed)
+            if (event.type == Event::Closed) {
                 window.close();
-        }
-
-        window.clear(Color::White);  // Keep background white
-        window.draw(text);
-        window.display();
-    }
-}
-
-void displayWhiteWon() {
-    RenderWindow window(VideoMode(800, 800), "Result");
-    window.clear(Color::Black);
-
-    Font font;
-    if (!font.loadFromFile("Roboto-Medium.ttf")) {
-        return;
-    }
-
-    Text text;
-    text.setFont(font);
-    text.setString("WHITES WON");
-    text.setCharacterSize(50);
-    text.setFillColor(Color::White);  
-    text.setStyle(Text::Bold);
-
-    // Center text in the window
-    FloatRect textRect = text.getLocalBounds();
-    text.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
-    text.setPosition(window.getSize().x / 2.0f, window.getSize().y / 2.0f);
-
-    while (window.isOpen()) {
-        Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == Event::Closed)
-                window.close();
+                return true; // Return to menu when window closes
+            }
         }
 
         window.clear(Color::Black);
-        window.draw(text);
+        window.draw(sprite);
         window.display();
     }
+
+    return false;
 }
 
+
+
 void promotePawn(int i, bool isWhite, Vector2f pawnPosition) {
-    RenderWindow promoteWindow(VideoMode(300, 100), "Promote Pawn");
+    RenderWindow promoteWindow(VideoMode(230, 100), "Promote Pawn");
     Texture promoteTexture;
-    promoteTexture.loadFromFile("images/promote.png");
+    promoteTexture.loadFromFile("code/images/figures.png");
 
     // Cắt ảnh cho 4 quân cờ có thể được phong
     Sprite rook(promoteTexture, IntRect(0, isWhite ? 0 : squareSize, squareSize, squareSize));
@@ -230,9 +188,6 @@ void promotePawn(int i, bool isWhite, Vector2f pawnPosition) {
     }
 }
 
-
-
-
 // di chuyển quân cờ
 void move(string str)
 {
@@ -245,11 +200,11 @@ void move(string str)
             f[i].setPosition(-100, -100);
             
             if (isWhiteKing(f[i])) {
-                displayBlackWon();
+                displayWon(1);
             }
 
             else if (isBlackKing(f[i])) {
-                displayWhiteWon();
+                displayWon(0);
             }
         }
 
@@ -364,65 +319,61 @@ void CloseConnection() {
     CloseHandle(pi.hThread);
 }
 
-enum MenuOptions { PvE, PvP, Quit , None};
+enum MenuOptions { PvE, PvP, Quit, None };
 
-MenuOptions showMenu(sf::RenderWindow& window) {
-    sf::Texture backgroundTexture;
-    backgroundTexture.loadFromFile("images/background.png");
-    sf::Sprite background(backgroundTexture);
+MenuOptions showMenu(RenderWindow& window) {
+    Texture backgroundTexture, pveTexture, pvpTexture, quitTexture;
+    backgroundTexture.loadFromFile("code/images/menu.png");
+    pveTexture.loadFromFile("code/images/PvE.png");
+    pvpTexture.loadFromFile("code/images/PvP.png");
+    quitTexture.loadFromFile("code/images/quit.png");
 
-    sf::Font font;
-    font.loadFromFile("Roboto-Medium.ttf");
-    sf::Text menu[4];
-    std::string labels[4] = { "1: PvE", "2: PvP", "3: Quit" };
-    for (int i = 0; i < 4; ++i) {
-        menu[i].setFont(font);
-        menu[i].setString(labels[i]);
-        menu[i].setCharacterSize(30);
-        menu[i].setFillColor(sf::Color::Black);
-        menu[i].setPosition(100.f, 100.f + i * 50);
-    }
+    Sprite background(backgroundTexture);
+    Sprite pveButton(pveTexture), pvpButton(pvpTexture), quitButton(quitTexture);
+
+    // Position each button sprite on the screen
+    pveButton.setPosition(100.f, 70.f);
+    pvpButton.setPosition(100.f, 200.f);
+    quitButton.setPosition(100.f, 330.f);
 
     while (window.isOpen()) {
-        sf::Event event;
+        Event event;
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) window.close();
-            if (event.type == sf::Event::KeyPressed) {
-                switch (event.key.code) {
-                case sf::Keyboard::Num1: return PvE;
-                case sf::Keyboard::Num2: return PvP;
-                case sf::Keyboard::Num3: return Quit;
-                default: break;
-                }
+            if (event.type == Event::Closed) window.close();
+
+            if (event.type == Event::MouseButtonPressed && event.mouseButton.button == Mouse::Left) {
+                Vector2f mousePos(event.mouseButton.x, event.mouseButton.y);
+
+                if (pveButton.getGlobalBounds().contains(mousePos)) return PvE;
+                if (pvpButton.getGlobalBounds().contains(mousePos)) return PvP;
+                if (quitButton.getGlobalBounds().contains(mousePos)) return Quit;
             }
         }
 
         window.clear();
         window.draw(background);
-        for (int i = 0; i < 4; ++i) window.draw(menu[i]);
+        window.draw(pveButton);
+        window.draw(pvpButton);
+        window.draw(quitButton);
         window.display();
     }
     return None;
 }
 
-
-
-
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(800, 800), "Chess Menu");
+    RenderWindow window(VideoMode(504, 504), "Chess Menu");
     MenuOptions choice = showMenu(window);
 
     if (choice == PvE) {
 
         RenderWindow window(VideoMode(504, 504), "PvE mode");
-        ConnectToEngine("stockfish.exe");
+        ConnectToEngine("code/stockfish.exe");
         // Relative path in the same directory
 
-
         Texture t1, t2;
-        t1.loadFromFile("images/figures.png");
-        t2.loadFromFile("images/board.png");
+        t1.loadFromFile("code/images/figures.png");
+        t2.loadFromFile("code/images/board.png");
 
         // gán t1 cho toàn bộ mảng hình ảnh quân cờ f[i], sau đó mới chỉnh sửa lại texture sao cho các hình ảnh quân cờ hợp lí ở hàm loadPosition
         for (int i = 0; i < 32; i++) f[i].setTexture(t1);
@@ -548,11 +499,9 @@ int main()
 
         RenderWindow window(VideoMode(504, 504), "PvP mode");
 
-
-
         Texture t1, t2;
-        t1.loadFromFile("images/figures.png");
-        t2.loadFromFile("images/board.png");
+        t1.loadFromFile("code/images/figures.png");
+        t2.loadFromFile("code/images/board.png");
 
         for (int i = 0; i < 32; i++) f[i].setTexture(t1);
         Sprite sBoard(t2);
@@ -562,7 +511,7 @@ int main()
         bool isMove = false;
         float dx = 0, dy = 0;
         Vector2f oldPos, newPos;
-        std::string str;
+        string str;
         int n = 0;
 
         while (window.isOpen())
@@ -584,7 +533,7 @@ int main()
 
                 
                 if (e.type == Event::MouseButtonPressed)
-                    if (e.key.code == Mouse::Left)
+                    if (e.mouseButton.button == Mouse::Left)
                         for (int i = 0; i < 32; i++)
                             if (f[i].getGlobalBounds().contains(pos.x, pos.y))
                             {
@@ -595,7 +544,7 @@ int main()
                             }
 
                 if (e.type == Event::MouseButtonReleased)
-                    if (e.key.code == Mouse::Left)
+                    if (e.mouseButton.button == Mouse::Left)
                     {
                         isMove = false;
                         Vector2f p = f[n].getPosition() + Vector2f(squareSize / 2, squareSize / 2);
@@ -656,18 +605,4 @@ int main()
         window.close();
         return 0;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
