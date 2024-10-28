@@ -15,3 +15,5 @@ main.exe
 ![image](https://github.com/user-attachments/assets/860bf852-bafd-4543-a852-127ec9ccf594)
 
 - hoặc vào folder tìm main.exe chạy luôn cũng được
+
+mọi người hãy cố gắng đọc hiểu source code để có thể trả lời thầy nhé!
