@@ -1,5 +1,4 @@
 #include <SFML/Graphics.hpp>
-#include <time.h>
 #include <windows.h>
 #include <iostream>
 #include <vector>
@@ -7,31 +6,20 @@
 using namespace sf;
 using namespace std;
 
-int squareSize = 56;                          // kích thước ô cờ
-Vector2f offset(28, 28);                 // Offset của mỗi quân cờ
+int squareSize = 56; // pixel ô cờ                     
+Vector2f offset(28, 28);               
 bool isBotTurn = false;
-vector<string> moveHistory; // Lich su di chuyen
 vector<bool> pawnPromoted(32, false);
-
-Sprite f[32];                           // mảng lưu hình ảnh 32 quân cờ
-string position = "";                // các nước di chuyển của ván đấu
+Sprite f[32]; 
+                 
+string position = "";                
 int isWhiteKingDead = 0;    
 int isBlackKingDead = 0;
+
 // Stockfish process handles
 STARTUPINFOA sti = { 0 };
 PROCESS_INFORMATION pi = { 0 };
 HANDLE pipin_w, pipin_r, pipout_w, pipout_r;
-
-// Chess board layout with initial positions
-int board[8][8] =
-{ -1,-2,-3,-4,-5,-3,-2,-1,
- -6,-6,-6,-6,-6,-6,-6,-6,
-  0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0,
-  6, 6, 6, 6, 6, 6, 6, 6,
-  1, 2, 3, 4, 5, 3, 2, 1 };
 
 // chuyển vị trí quân cờ từ dạng vector2f sang kí hiệu cờ vua đại số (algebraic notation)
 string toChessNote(Vector2f p)
@@ -42,7 +30,7 @@ string toChessNote(Vector2f p)
     return s;
 }
 
-// chuyển từ algebraic notation sang vị trí quân cờ dạng vector2f (ngược lại hàm bên trên)
+// chuyển từ algebraic notation sang vị trí quân cờ dạng vector2f
 Vector2f toCoord(char a, char b)
 {
     int x = int(a) - 'a';                 // Column
@@ -52,25 +40,23 @@ Vector2f toCoord(char a, char b)
 
 void moveCastling(string str)
 {
-    Vector2f oldPos = toCoord(str[0], str[1]); // gán giá trị cũ của quân cờ trước khi bị di chuyển vào oldPos
-    Vector2f newPos = toCoord(str[2], str[3]); // gán giá trị mới của quân cờ sau khi bị di chuyển vào newPos
+    Vector2f oldPos = toCoord(str[0], str[1]); 
+    Vector2f newPos = toCoord(str[2], str[3]); 
 
-    // xóa hình ảnh của quân cờ bị ăn bằng cách đưa nó ra vị trí -100 -100 (ẩn quân cờ khỏi window)
     for (int i = 0; i < 32; i++)
         if (f[i].getPosition() == newPos)
             f[i].setPosition(-100, -100);
 
-    // dịch chuyển vị trí của quân cờ
     for (int i = 0; i < 32; i++)
         if (f[i].getPosition() == oldPos)
             f[i].setPosition(newPos);
 }
 
-IntRect whitePawnRect(squareSize * 5, squareSize * 1, squareSize, squareSize); // quân tốt trắng
-IntRect blackPawnRect(squareSize * 5, squareSize * 0, squareSize, squareSize); // quân tốt đen
-IntRect whiteKingRect(squareSize * 4, squareSize * 1, squareSize, squareSize); // white King
-IntRect blackKingRect(squareSize * 4, squareSize * 0, squareSize, squareSize); // black King
-// Hàm kiểm tra quân cờ có phải là quân tốt hay không
+IntRect whitePawnRect(squareSize * 5, squareSize * 1, squareSize, squareSize);
+IntRect blackPawnRect(squareSize * 5, squareSize * 0, squareSize, squareSize); 
+IntRect whiteKingRect(squareSize * 4, squareSize * 1, squareSize, squareSize); 
+IntRect blackKingRect(squareSize * 4, squareSize * 0, squareSize, squareSize); 
+
 bool isWhitePawn(Sprite& piece) {
     IntRect textureRect = piece.getTextureRect();
     return (textureRect == whitePawnRect);
@@ -132,8 +118,6 @@ bool displayWon(int a) {
     return false;
 }
 
-
-
 void promotePawn(int i, bool isWhite, Vector2f pawnPosition) {
     RenderWindow promoteWindow(VideoMode(230, 100), "Promote Pawn");
     Texture promoteTexture;
@@ -188,7 +172,6 @@ void promotePawn(int i, bool isWhite, Vector2f pawnPosition) {
     }
 }
 
-// di chuyển quân cờ
 void move(string str)
 {
     Vector2f oldPos = toCoord(str[0], str[1]); // gán giá trị cũ của quân cờ trước khi bị di chuyển vào oldPos
@@ -218,11 +201,11 @@ void move(string str)
     for (int i = 0; i < 32; i++) {
         if (isWhitePawn(f[i]) && int(f[i].getPosition().y / squareSize) == 0 && !pawnPromoted[i]) {
             promotePawn(i, false, f[i].getPosition());
-            pawnPromoted[i] = true; // Cập nhật trạng thái đã phong cấp
+            pawnPromoted[i] = true; 
         }
         else if (isBlackPawn(f[i]) && int(f[i].getPosition().y / squareSize) == 7 && !pawnPromoted[i]) {
             promotePawn(i, true, f[i].getPosition());
-            pawnPromoted[i] = true; // Cập nhật trạng thái đã phong cấp
+            pawnPromoted[i] = true; 
         }
     }
 
@@ -234,7 +217,17 @@ void move(string str)
 
 }
 
-// load hình ảnh của các quân cờ trong trò chơi
+int board[8][8] =
+{ -1,-2,-3,-4,-5,-3,-2,-1,
+ -6,-6,-6,-6,-6,-6,-6,-6,
+  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0,
+  6, 6, 6, 6, 6, 6, 6, 6,
+  1, 2, 3, 4, 5, 3, 2, 1 };
+ 
+
 void loadPosition()
 {
     int k = 0;               //stores the Sprite objects for each chess piece.
@@ -280,7 +273,6 @@ void ConnectToEngine(const char* path) {
     }
 }
 
-
 string getNextMove(const string& position) {
     string command = "position startpos moves " + position + "\ngo\n";
     DWORD writ, read, available;
@@ -291,7 +283,7 @@ string getNextMove(const string& position) {
 
     // Wait for Stockfish response
     while (true) {
-        Sleep(50);  // Short delay to allow Stockfish to process
+        Sleep(100);  // Short delay to allow Stockfish to process
 
         PeekNamedPipe(pipout_r, NULL, 0, NULL, &available, NULL);
         if (available > 0) {
@@ -319,15 +311,13 @@ void CloseConnection() {
     CloseHandle(pi.hThread);
 }
 
-enum MenuOptions { PvE, PvP, Quit, None };
-
+enum MenuOptions {PvE, PvP, Quit, None};
 MenuOptions showMenu(RenderWindow& window) {
     Texture backgroundTexture, pveTexture, pvpTexture, quitTexture;
     backgroundTexture.loadFromFile("code/images/menu.png");
     pveTexture.loadFromFile("code/images/PvE.png");
     pvpTexture.loadFromFile("code/images/PvP.png");
     quitTexture.loadFromFile("code/images/quit.png");
-
     Sprite background(backgroundTexture);
     Sprite pveButton(pveTexture), pvpButton(pvpTexture), quitButton(quitTexture);
 
@@ -340,16 +330,13 @@ MenuOptions showMenu(RenderWindow& window) {
         Event event;
         while (window.pollEvent(event)) {
             if (event.type == Event::Closed) window.close();
-
             if (event.type == Event::MouseButtonPressed && event.mouseButton.button == Mouse::Left) {
                 Vector2f mousePos(event.mouseButton.x, event.mouseButton.y);
-
                 if (pveButton.getGlobalBounds().contains(mousePos)) return PvE;
                 if (pvpButton.getGlobalBounds().contains(mousePos)) return PvP;
                 if (quitButton.getGlobalBounds().contains(mousePos)) return Quit;
             }
         }
-
         window.clear();
         window.draw(background);
         window.draw(pveButton);
@@ -365,17 +352,14 @@ int main()
     RenderWindow window(VideoMode(504, 504), "Chess Menu");
     MenuOptions choice = showMenu(window);
 
-    if (choice == PvE) {
-
+    if (choice != Quit) {
         RenderWindow window(VideoMode(504, 504), "PvE mode");
-        ConnectToEngine("code/stockfish.exe");
-        // Relative path in the same directory
+        if (choice == PvE) ConnectToEngine("code/stockfish.exe");
 
         Texture t1, t2;
         t1.loadFromFile("code/images/figures.png");
         t2.loadFromFile("code/images/board.png");
 
-        // gán t1 cho toàn bộ mảng hình ảnh quân cờ f[i], sau đó mới chỉnh sửa lại texture sao cho các hình ảnh quân cờ hợp lí ở hàm loadPosition
         for (int i = 0; i < 32; i++) f[i].setTexture(t1);
         Sprite sBoard(t2);
 
@@ -387,75 +371,67 @@ int main()
         string str;
         int n = 0;
 
-        while (window.isOpen()) // bắt toàn bộ event e
-        {
-            Vector2i pos = Mouse::getPosition(window) - Vector2i(offset); // vị trí trỏ chuột
-            // lấy vị trí con trỏ chuột, cần phải trừ đi offset thì vị trí của chuột mới chính xác ở trên bàn cờ
-
+        while (window.isOpen()) {
+            Vector2i pos = Mouse::getPosition(window) - Vector2i(offset);
             Event e;
-            while (window.pollEvent(e))
-            {
-                if (e.type == Event::Closed) // exit
-                    window.close();
 
-                // đi lại nước trước, check nút backspace
-                if (e.type == Event::KeyPressed && e.key.code == Keyboard::BackSpace)
-                {
-                    if (position.length() > 6) // xóa string di chuyển, ví dụ 
+            while (window.pollEvent(e)) {
+                // tắt cửa sổ
+                if (e.type == Event::Closed) window.close();
+                // backspace để đi lại 1 bước
+                if (e.type == Event::KeyPressed && e.key.code == Keyboard::BackSpace) {
+                    if (position.length() > 6) 
                         position.erase(position.length() - 6, 5);
-                    loadPosition(); // update bàn cờ
+                    loadPosition(); 
                 }
-
-                // người chơi di chuyển các quân cờ bằng các ấn giữ chuột trái
+                // nhấp chuột
                 if (e.type == Event::MouseButtonPressed && e.mouseButton.button == Mouse::Left)
                     for (int i = 0; i < 32; i++)
-                        if (f[i].getGlobalBounds().contains(pos.x, pos.y))
-                            // kiểm tra người chơi chọn quân cờ gì, và chọn quân cờ đó để di chuyển
-                        {
+                        if (f[i].getGlobalBounds().contains(pos.x, pos.y)) {
                             isMove = true;
-                            // một quân cờ nào đó đang di chuyển, đang bị drag
                             n = i;
                             // n mang giá trị của quân cờ được chọn trong 32 quân cờ
                             dx = pos.x - f[i].getPosition().x;
                             dy = pos.y - f[i].getPosition().y;
-                            // vị trí của hỉnh ảnh quân cờ, sao cho khi drag quân cờ thì hình ảnh quân cờ "dính" vào con trỏ chuột một cách hợp lí
+                            // vị trí của hỉnh ảnh quân cờ, sao cho khi drag quân cờ 
+                            // thì hình ảnh quân cờ "dính" vào con trỏ chuột một cách hợp lí
                             oldPos = f[i].getPosition();
                             // lưu lại vị trí cũ của quân cờ cho các hành động sau
                         }
-
-                if (e.type == Event::MouseButtonReleased && e.mouseButton.button == Mouse::Left)
-                {
-                    isMove = false;      // quân cờ ngừng bị drag
-                    Vector2f p = f[n].getPosition() + Vector2f(squareSize / 2, squareSize / 2); // vector2f của vị trí quân cờ
-                    // cần phải cộng thêm để lấy vị trí trung tâm của quân cờ, do hàm getPosition trả về tọa độ góc trên bên trái của ảnh quân cờ 
+                // nhả chuột
+                if (e.type == Event::MouseButtonReleased && e.mouseButton.button == Mouse::Left) {
+                    isMove = false;    
+                    Vector2f p = f[n].getPosition() + Vector2f(squareSize / 2, squareSize / 2);
+                    // vector2f của vị trí quân cờ 
+                    // cần phải cộng thêm để lấy vị trí trung tâm của quân cờ, 
+                    // do hàm getPosition trả về tọa độ góc trên bên trái của ảnh quân cờ
                     newPos = Vector2f(squareSize * int(p.x / squareSize), squareSize * int(p.y / squareSize));
-                    // tính toán vị trí sao cho khi quân cờ được đặt xuống, thì vị trí mới của quân cờ nằm trên các ô cờ (có thể hiểu là làm tròn vị trí mới của quân cờ để quân cờ snap vào đúng ô cờ)
+                    // tính toán vị trí sao cho khi quân cờ được đặt xuống, thì vị trí mới của quân cờ nằm trên 
+                    // các ô cờ (có thể hiểu là làm tròn vị trí mới của quân cờ để quân cờ snap vào đúng ô cờ)
                     str = toChessNote(oldPos) + toChessNote(newPos);
+                    // ví dụ, position có thể là "e2e4 d7d5 "
                     move(str);
-                    if (oldPos != newPos) position += str + " "; // ví dụ, position có thể là "e2e4 d7d5 "
+                    if (oldPos != newPos) position += str + " ";
                     f[n].setPosition(newPos);
                 }
             }
-
-            // Stockfish move// Computer move (bot move) when space is pressed
-            if (Keyboard::isKeyPressed(Keyboard::Space))
-            {
+            // Stockfish move
+            if (choice == PvE && Keyboard::isKeyPressed(Keyboard::Space)) {
                 str = getNextMove(position);
-
                 oldPos = toCoord(str[0], str[1]);
                 newPos = toCoord(str[2], str[3]);
 
                 // Find the piece that needs to move
-                for (int i = 0; i < 32; i++)
-                    if (f[i].getPosition() == oldPos)
+                for (int i = 0; i < 32; i++) {
+                    if (f[i].getPosition() == oldPos) {
                         n = i;
-
-                ///// Animation loop for bot's move /////
-                for (int k = 0; k < 50; k++)
-                {
+                    }
+                }
+                // Animation loop for bot's move 
+                for (int k = 0; k < 200; k++) {
                     // Move piece incrementally towards new position
                     Vector2f p = newPos - oldPos;
-                    f[n].move(p.x / 50, p.y / 50);
+                    f[n].move(p.x / 200, p.y / 200);
 
                     window.clear();            // Clear the window for a fresh frame
                     window.draw(sBoard);       // Draw the board first
@@ -474,134 +450,27 @@ int main()
                 f[n].setPosition(newPos);      // Set the piece to its final position
             }
 
-            // Update piece position while dragging
-            if (isMove)
-                f[n].setPosition(pos.x - dx, pos.y - dy);
-
-            ////// Draw section for the board and pieces //////
-
-            window.clear();                     // Clear the window
-            window.draw(sBoard);                // Draw the board
-
-            // Apply offset and draw all pieces in their final positions
-            for (int i = 0; i < 32; i++) f[i].move(offset);
-            for (int i = 0; i < 32; i++) window.draw(f[i]);
-            for (int i = 0; i < 32; i++) f[i].move(-offset);
-
-            window.display();                   // Display everything on the window
+            // load hình ảnh
+            if (isMove) f[n].setPosition(pos.x - dx, pos.y - dy);
+            window.clear();
+            window.draw(sBoard);
+            for (int i = 0; i < 32; i++) {
+                f[i].move(offset);
+            }
+            for (int i = 0; i < 32; i++) {
+                window.draw(f[i]); 
+            }
+            window.draw(f[n]);
+            for (int i = 0; i < 32; i++) {
+                f[i].move(-offset);
+            }
+            window.display();
         }
-
         CloseConnection();
         return 0;
     }
 
-    if (choice == PvP) {
-
-        RenderWindow window(VideoMode(504, 504), "PvP mode");
-
-        Texture t1, t2;
-        t1.loadFromFile("code/images/figures.png");
-        t2.loadFromFile("code/images/board.png");
-
-        for (int i = 0; i < 32; i++) f[i].setTexture(t1);
-        Sprite sBoard(t2);
-
-        loadPosition();
-
-        bool isMove = false;
-        float dx = 0, dy = 0;
-        Vector2f oldPos, newPos;
-        string str;
-        int n = 0;
-
-        while (window.isOpen())
-        {
-            Vector2i pos = Mouse::getPosition(window) - Vector2i(offset);
-
-            Event e;
-            while (window.pollEvent(e))
-            {
-                if (e.type == Event::Closed)
-                    window.close();
-
-              
-                if (e.type == Event::KeyPressed)
-                    if (e.key.code == Keyboard::BackSpace)
-                    {
-                        if (position.length() > 6) position.erase(position.length() - 6, 5); loadPosition();
-                    }
-
-                
-                if (e.type == Event::MouseButtonPressed)
-                    if (e.mouseButton.button == Mouse::Left)
-                        for (int i = 0; i < 32; i++)
-                            if (f[i].getGlobalBounds().contains(pos.x, pos.y))
-                            {
-                                isMove = true; n = i;
-                                dx = pos.x - f[i].getPosition().x;
-                                dy = pos.y - f[i].getPosition().y;
-                                oldPos = f[i].getPosition();
-                            }
-
-                if (e.type == Event::MouseButtonReleased)
-                    if (e.mouseButton.button == Mouse::Left)
-                    {
-                        isMove = false;
-                        Vector2f p = f[n].getPosition() + Vector2f(squareSize / 2, squareSize / 2);
-                        newPos = Vector2f(squareSize * int(p.x / squareSize), squareSize * int(p.y / squareSize));
-                        str = toChessNote(oldPos) + toChessNote(newPos);
-                        move(str);
-                        if (oldPos != newPos) {
-                            position += str + " ";
-                            moveHistory.push_back(str);
-                        }
-                        f[n].setPosition(newPos);
-                    }
-            }
-
-            //comp move
-            if (Keyboard::isKeyPressed(Keyboard::Space))
-            {
-
-                oldPos = toCoord(str[0], str[1]);
-                newPos = toCoord(str[2], str[3]);
-
-                for (int i = 0; i < 32; i++) if (f[i].getPosition() == oldPos) n = i;
-
-                /////animation///////
-                for (int k = 0; k < 50; k++)
-                {
-                    Vector2f p = newPos - oldPos;
-                    f[n].move(p.x / 50, p.y / 50);
-                    window.draw(sBoard);
-                    for (int i = 0; i < 32; i++) f[i].move(offset);
-                    for (int i = 0; i < 32; i++) window.draw(f[i]); window.draw(f[n]);
-                    for (int i = 0; i < 32; i++) f[i].move(-offset);
-                    window.display();
-                }
-
-                move(str);
-                position += str + " ";
-                moveHistory.push_back(str);
-                f[n].setPosition(newPos);
-            }
-
-            if (isMove) f[n].setPosition(pos.x - dx, pos.y - dy);
-
-            ////// draw  ///////
-            window.clear();
-            window.draw(sBoard);
-            for (int i = 0; i < 32; i++) f[i].move(offset);
-            for (int i = 0; i < 32; i++) window.draw(f[i]); window.draw(f[n]);
-            for (int i = 0; i < 32; i++) f[i].move(-offset);
-
-            //drawMoveHistory(window);
-            window.display();
-        }
-
-    }
-
-    if (choice == Quit) {
+    else {
         window.close();
         return 0;
     }
