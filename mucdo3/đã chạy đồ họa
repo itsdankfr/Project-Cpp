@@ -3,124 +3,158 @@
 #include <thread>
 #include <chrono>
 #include <iomanip>
+#include <conio.h>
 
 void drawSquareColon(int x, int y, int size) {
-    setcolor(RED);  // Ð?t màu d? cho d?u :
+    setcolor(RED);  // Đặt màu đỏ cho dấu :
     setfillstyle(SOLID_FILL, RED);
 
-    int squareSize = size / 5; // Kích thu?c c?a hình vuông (kích thu?c t? l? v?i segmentSize)
+    int squareSize = size / 5; // Kích thước của hình vuông (kích thước tỉ lệ với segmentSize)
 
-    // V? hai hình vuông nh? d? bi?u di?n d?u hai ch?m
-    bar(x - squareSize / 2, y - size / 2 - squareSize / 2, x + squareSize / 2, y - size / 2 + squareSize / 2);  // Hình vuông trên
-    bar(x - squareSize / 2, y + size / 2 - squareSize / 2, x + squareSize / 2, y + size / 2 + squareSize / 2);  // Hình vuông du?i
+    // Vẽ hai hình vuông nhỏ để biểu diễn dấu ':'
+    bar(x - squareSize / 2, y - size / 2 - squareSize / 2, x + squareSize / 2, y - size / 2 + squareSize / 2);  // H�nh vu�ng tr�n
+    bar(x - squareSize / 2, y + size / 2 - squareSize / 2, x + squareSize / 2, y + size / 2 + squareSize / 2);  // H�nh vu�ng du?i
 }
 
-// Hàm v? t?ng do?n LED
 void drawSegment(int x1, int y1, int x2, int y2, bool on) {
     if (on) {
-        setcolor(RED); // Màu d? cho LED
+        setcolor(RED);
         setfillstyle(SOLID_FILL, RED);
     } else {
-        setcolor(COLOR(51, 0, 1));  // Ð?t màu d? m? m? // Màu den n?u t?t
-        setfillstyle(SOLID_FILL, COLOR(51, 0, 1));
+        setcolor(BLACK);
+        setfillstyle(SOLID_FILL, BLACK);
     }
-
-    bar(x1, y1, x2 , y2);  // V? m?t hình ch? nh?t d?i di?n cho do?n LED
+    bar(x1, y1, x2, y2);
 }
 
-// Hàm v? m?t ch? s? d?ng LED 7 do?n
 void drawDigit(int x, int y, int digit, int segmentSize) {
-    int width = segmentSize;        // Chi?u dài do?n LED ngang
-    int height = segmentSize / 4;   // Chi?u cao do?n LED d?c
-    int spacing = height;           // Kho?ng cách gi?a các do?n
+    int width = segmentSize;
+    int height = segmentSize / 4;
+    int spacing = height;
 
-    // T?o m?ng dánh d?u các do?n LED nào c?n du?c b?t cho t?ng ch? s? t? 0 d?n 9
     bool segments[10][7] = {
-        {1, 1, 1, 1, 1, 1, 0}, // S? 0
-        {0, 0, 1, 0, 0, 1, 0}, // S? 1
-        {1, 0, 1, 1, 1, 0, 1}, // S? 2
-        {1, 0, 1, 1, 0, 1, 1}, // S? 3
-        {0, 1, 1, 0, 0, 1, 1}, // S? 4
-        {1, 1, 0, 1, 0, 1, 1}, // S? 5
-        {1, 1, 0, 1, 1, 1, 1}, // S? 6
-        {1, 0, 1, 0, 0, 1, 0}, // S? 7
-        {1, 1, 1, 1, 1, 1, 0}, // S? 8
-        {1, 1, 1, 1, 0, 1, 1}  // S? 9
+        {1, 1, 1, 1, 1, 1, 0},
+        {0, 0, 1, 0, 0, 1, 0},
+        {1, 0, 1, 1, 1, 0, 1},
+        {1, 0, 1, 1, 0, 1, 1},
+        {0, 1, 1, 0, 0, 1, 1},
+        {1, 1, 0, 1, 0, 1, 1},
+        {1, 1, 0, 1, 1, 1, 1},
+        {1, 0, 1, 0, 0, 1, 0},
+        {1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 0, 1, 1}
     };
 
-    // V? t?ng do?n LED c?a ch? s?
-    drawSegment(x + spacing, y, x + width + spacing, y + height, segments[digit][0]); // A (trên cùng)
-    drawSegment(x, y + spacing, x + height, y + width + spacing, segments[digit][1]); // B (ph?i trên)
-    drawSegment(x + width + spacing, y + spacing, x + width + spacing + height, y + width + spacing, segments[digit][2]); // C (ph?i du?i)
-    drawSegment(x + spacing, y + 2 * width + 2 * spacing, x + width + spacing, y + 2 * width + 2 * spacing + height, segments[digit][3]); // D (du?i cùng)
-    drawSegment(x, y + width + 2 * spacing, x + height, y + 2 * width + 2 * spacing, segments[digit][4]); // E (trái du?i)
-    drawSegment(x + width + spacing, y + width + 2 * spacing, x + width + spacing + height, y + 2 * width + 2 * spacing, segments[digit][5]); // F (trái trên)
-    drawSegment(x + spacing, y + width + spacing, x + width + spacing, y + width + spacing + height, segments[digit][6]); // G (gi?a)
-
+    drawSegment(x + spacing, y, x + width + spacing, y + height, segments[digit][0]);
+    drawSegment(x, y + spacing, x + height, y + width + spacing, segments[digit][1]);
+    drawSegment(x + width + spacing, y + spacing, x + width + spacing + height, y + width + spacing, segments[digit][2]);
+    drawSegment(x + spacing, y + 2 * width + 2 * spacing, x + width + spacing, y + 2 * width + 2 * spacing + height, segments[digit][3]);
+    drawSegment(x, y + width + 2 * spacing, x + height, y + 2 * width + 2 * spacing, segments[digit][4]);
+    drawSegment(x + width + spacing, y + width + 2 * spacing, x + width + spacing + height, y + 2 * width + 2 * spacing, segments[digit][5]);
+    drawSegment(x + spacing, y + width + spacing, x + width + spacing, y + width + spacing + height, segments[digit][6]);
 }
 
-// Hàm hi?n th? th?i gian dùng LED 7 do?n
 void displayTime(int hours, int minutes, int seconds, int segmentSize) {
-    cleardevice();  // Xóa màn hình
-    setbkcolor(BLACK);  // Ð?t n?n màu den
+    cleardevice();
+    setbkcolor(BLACK);
 
-    // Tách các ch? s? c?a gi?, phút và giây
     int digits[6] = {
         hours / 10, hours % 10,
         minutes / 10, minutes % 10,
         seconds / 10, seconds % 10
     };
 
-    // Hi?n th? các ch? s? cho gi?
     for (int i = 0; i < 2; ++i) {
-        drawDigit(50 + i * (segmentSize * 2 + 40), 100, digits[i], segmentSize); // Gi?
+        drawDigit(60 + i * (segmentSize * 2 + 40), 100, digits[i], segmentSize);
     }
     
-    // Hi?n th? d?u : gi?a gi? và phút
-    drawSquareColon(308, 170, segmentSize); // V? trí d?u : gi?a gi? và phút
-    
-    // Hi?n th? các ch? s? cho phút
+    drawSquareColon(308, 170, segmentSize);
+
     for (int i = 2; i < 4; ++i) {
-        drawDigit(350 + (i - 2) * (segmentSize * 2 + 40), 100, digits[i], segmentSize); // Phút
+        drawDigit(350 + (i - 2) * (segmentSize * 2 + 40), 100, digits[i], segmentSize);
     }
     
-    // Hi?n th? d?u : gi?a gi? và phút
-    drawSquareColon(608, 170, segmentSize); // V? trí d?u : gi?a gi? và phút
+    drawSquareColon(608, 170, segmentSize);
     
-    // Hi?n th? các ch? s? cho giây
     for (int i = 4; i < 6; ++i) {
-        drawDigit(650 + (i - 4) * (segmentSize * 2 + 40), 100, digits[i], segmentSize); // Giây
+        drawDigit(650 + (i - 4) * (segmentSize * 2 + 40), 100, digits[i], segmentSize);
     }
 }
 
+// Hàm hiển thị tốc độ 
+void displaySpeed(double speed) {
+    setcolor(WHITE);
+    setbkcolor(BLACK);
+
+    // Hiển thị tốc độ ở góc dưới bên phải
+    std::ostringstream ss;
+    ss << std::fixed << std::setprecision(1) << speed << "x";
+    std::string speedText = ss.str();
+
+    // Tăng kích thước văn bản
+    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 4);
+    outtextxy(800, 400, const_cast<char*>(speedText.c_str()));
+}
 
 int main() {
-    // Kh?i t?o c?a s? d? h?a
     int gd = DETECT, gm;
     initgraph(&gd, &gm, "");
 
-	int width = 1000;   // Chi?u r?ng c?a s?
-    int height = 500;  // Chi?u cao c?a s?
+    int width = 1000;
+    int height = 500;
     initwindow(width, height, "LED 7 Segment Timer");
 
     int totalSeconds;
     std::cout << "Enter total time in seconds: ";
     std::cin >> totalSeconds;
+    totalSeconds %= 86400; //Một ngày có 86400s
+    std::cout << "\nManual:\n";
+	std::cout << "Press <p> for pause\n";	
+	std::cout << "Press <r> for resume\n";
+	std::cout << "Press <e> for end\n";
+	std::cout << "Press <+> for speed up 0,5x\n";
+	std::cout << "Press <-> for slow down 0,5x\n";
+	std::cout << "Press <a> for adding 60 seconds\n";
+	std::cout << "Press <m> for minus 60 seconds\n";
+    bool paused = false;
+    double speed = 1.0;  // T?c d? m?c d?nh
 
     for (int i = totalSeconds; i >= 0; --i) {
-        int hours = i / 3600;
-        int minutes = (i % 3600) / 60;
-        int seconds = i % 60;
+        if (kbhit()) {
+            char ch = getch();
+            if (ch == 'p') {
+                paused = true; // Tạm dừng khi nhận phím 'p'
+            } else if (ch == 'r') {
+                paused = false; // Tiếp tục khi nhận phím 'r'
+            } else if (ch == 'e') {
+                break;  // Thoát khỏi vòng lặp khi nhận phím 'e'
+            } else if (ch == '+') {
+                speed = (speed >= 3.0) ? 3.0 : speed + 0.5;
+            } else if (ch == '-') {
+                speed = (speed <= 0.5) ? 0.5 : speed - 0.5;
+            } else if (ch == 'a') {
+                i += 60;  // Tăng 60 giây
+            } else if (ch == 'm') {
+                i = (i >= 60) ? i - 60 : 0;  // Giảm 60 giây, không thấp hơn 0
+            }
+        }
 
-        displayTime(hours, minutes, seconds, 50); // Hi?n th? th?i gian v?i kích thu?c LED 7 do?n
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        if (!paused) {
+            int hours = i / 3600;
+            int minutes = (i % 3600) / 60;
+            int seconds = i % 60;
+
+            displayTime(hours, minutes, seconds, 50);
+            displaySpeed(speed);  // Hiển thị tốc độ hiện tại
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000 / speed)));
+        } else {
+            ++i;  // Giữ nguyên thờii gian khi tạm dừng
+        }
     }
 
-    // Hi?n th? thông báo khi h?t gi?
     cleardevice();
-    outtextxy(400, 400, "Time's up!");
+    outtextxy(200, 200, "Time's up!");
 
-    // Ch? ngu?i dùng nh?n phím tru?c khi dóng c?a s?
     getch();
     closegraph();
     return 0;
